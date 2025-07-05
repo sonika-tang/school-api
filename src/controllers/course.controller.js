@@ -44,7 +44,7 @@ export const createCourse = async (req, res) => {
  * @swagger
  * /courses:
  *   get:
- *     summary: Get all courses
+ *     summary: Get all courses with optional related data
  *     tags: [Courses]
  *     parameters:
  *       - in: query
@@ -55,33 +55,58 @@ export const createCourse = async (req, res) => {
  *         name: limit
  *         schema: { type: integer, default: 10 }
  *         description: Number of items per page
+ *       - in: query
+ *         name: sort
+ *         schema: 
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Sort order by creation time
+ *       - in: query
+ *         name: include
+ *         schema: 
+ *           type: string
+ *         description: |
+ *           Comma-separated related models
  *     responses:
  *       200:
- *         description: List of courses
+ *         description: List of courses with optionally included relations
  */
 export const getAllCourses = async (req, res) => {
-
-    // take certain amount at a time
     const limit = parseInt(req.query.limit) || 10;
-    // which page to take
     const page = parseInt(req.query.page) || 1;
+    const sortOrder = req.query.sort === 'asc' ? 'ASC' : 'DESC';
+    const includeParam = req.query.include || '';
 
-    const total = await db.Course.count();
+    const include = [];
+    
+    if (includeParam.includes('Teacher')) {
+        include.push({
+            model: db.Teacher,
+            attributes: ['id', 'name', 'department']
+        });
+    }
+
+    const options = {
+        limit: limit,
+        offset: (page - 1) * limit,
+        order: [['createdAt', sortOrder]],
+        distinct: true,
+        include: include.length ? include : undefined
+    };
 
     try {
-        const courses = await db.Course.findAll(
-            {
-                // include: [db.Student, db.Teacher],
-                limit: limit, offset: (page - 1) * limit
-            }
-        );
+        const { count, rows } = await db.Course.findAndCountAll(options);
+
         res.json({
             meta: {
-                totalItems: total,
+                totalItems: count,
                 page: page,
-                totalPages: Math.ceil(total / limit),
+                totalPages: Math.ceil(count / limit),
+                sortOrder: sortOrder,
+                included: includeParam || 'none'
             },
-            data: courses,
+            data: rows,
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
