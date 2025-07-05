@@ -7,6 +7,23 @@ import db from '../models/index.js';
  *   description: Student management
  */
 
+/**
+ * @swagger
+ * /students:
+ *   post:
+ *     summary: Create a new student
+ *     tags: [Students]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Student'
+ *     responses:
+ *       201:
+ *         description: Student created
+ */
+
 export const createStudent = async (req, res) => {
     try {
         const student = await db.Student.create(req.body);
@@ -22,14 +39,94 @@ export const createStudent = async (req, res) => {
  *   get:
  *     summary: Get all students
  *     tags: [Students]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *         description: Items per page
+ *       - in: query
+ *         name: sort
+ *         schema: { type: string, enum: [asc, desc], default: desc }
+ *         description: Sort order by creation time
+ *       - in: query
+ *         name: include
+ *         schema: { type: string }
+ *         description: |
+ *           Comma-separated relations to populate
  *     responses:
  *       200:
- *         description: List of students
+ *         description: List of students with requested relations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 meta:
+ *                   type: object
+ *                   properties:
+ *                     totalItems:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *                     currentPage:
+ *                       type: integer
+ *                     itemsPerPage:
+ *                       type: integer
+ *                     sortOrder:
+ *                       type: string
+ *                 data:
+ *                   type: array
  */
 export const getAllStudents = async (req, res) => {
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+    const sortOrder = req.query.sort === 'asc' ? 'ASC' : 'DESC';
+    const includeParam = req.query.include || '';
+    
+    const include = [];
+    const validRelations = {
+        Courses: {
+            model: db.Course,
+            attributes: ['id', 'title', 'description'],
+            through: { attributes: [] }
+        },
+        Teacher: {
+            model: db.Teacher,
+            attributes: ['id', 'name', 'email']
+        }
+    };
+
+    includeParam.split(',').forEach(relation => {
+        const trimmedRelation = relation.trim();
+        if (validRelations[trimmedRelation]) {
+            include.push(validRelations[trimmedRelation]);
+        }
+    });
+
     try {
-        const students = await db.Student.findAll({ include: db.Course });
-        res.json(students);
+        const { count, rows } = await db.Student.findAndCountAll({
+            include: include.length ? include : undefined,
+            limit: limit,
+            offset: (page - 1) * limit,
+            order: [['createdAt', sortOrder]],
+            distinct: true
+        });
+
+        res.json({
+            meta: {
+                totalItems: count,
+                totalPages: Math.ceil(count / limit),
+                currentPage: page,
+                itemsPerPage: limit,
+                sortOrder: sortOrder,
+                includedRelations: includeParam || 'none'
+            },
+            data: rows
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

@@ -44,14 +44,96 @@ export const createTeacher = async (req, res) => {
  *   get:
  *     summary: Get all teachers
  *     tags: [Teachers]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *         description: Items per page
+ *       - in: query
+ *         name: sort
+ *         schema: { type: string, enum: [asc, desc], default: desc }
+ *         description: Sort order by creation time
+ *       - in: query
+ *         name: include
+ *         schema: { type: string }
+ *         description: |
+ *           Comma-separated relations to populate (e.g. "Courses")
  *     responses:
  *       200:
- *         description: List of teachers
+ *         description: List of teachers with requested relations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 meta:
+ *                   type: object
+ *                   properties:
+ *                     totalItems:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *                     currentPage:
+ *                       type: integer
+ *                     itemsPerPage:
+ *                       type: integer
+ *                     sortOrder:
+ *                       type: string
+ *                     includedRelations:
+ *                       type: string
+ *                 data:
+ *                   type: array
  */
 export const getAllTeachers = async (req, res) => {
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+    const sortOrder = req.query.sort === 'asc' ? 'ASC' : 'DESC';
+    const includeParam = req.query.include || '';
+
+    const include = [];
+    const validRelations = {
+        Courses: {
+            model: db.Course,
+            attributes: ['id', 'title', 'description']
+        },
+        Students: {
+            model: db.Student,
+            attributes: ['id', 'name'],
+            through: { attributes: [] }
+        }
+    };
+
+    includeParam.split(',').forEach(relation => {
+        const trimmedRelation = relation.trim();
+        if (validRelations[trimmedRelation]) {
+            include.push(validRelations[trimmedRelation]);
+        }
+    });
+
     try {
-        const teachers = await db.Teacher.findAll({ include: db.Course });
-        res.json(teachers);
+        const { count, rows } = await db.Teacher.findAndCountAll({
+            include: include.length ? include : undefined,
+            limit: limit,
+            offset: (page - 1) * limit,
+            order: [['createdAt', sortOrder]],
+            distinct: true
+        });
+
+        res.json({
+            meta: {
+                totalItems: count,
+                totalPages: Math.ceil(count / limit),
+                currentPage: page,
+                itemsPerPage: limit,
+                sortOrder: sortOrder,
+                includedRelations: includeParam || 'none'
+            },
+            data: rows
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

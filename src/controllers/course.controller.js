@@ -44,7 +44,7 @@ export const createCourse = async (req, res) => {
  * @swagger
  * /courses:
  *   get:
- *     summary: Get all courses with optional related data
+ *     summary: Get all courses
  *     tags: [Courses]
  *     parameters:
  *       - in: query
