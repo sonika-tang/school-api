@@ -12,6 +12,8 @@ import db from '../models/index.js';
  * /students:
  *   post:
  *     summary: Create a new student
+ *     security:
+ *         - bearerAuth: []
  *     tags: [Students]
  *     requestBody:
  *       required: true
@@ -38,6 +40,8 @@ export const createStudent = async (req, res) => {
  * /students:
  *   get:
  *     summary: Get all students
+ *     security:
+ *         - bearerAuth: []
  *     tags: [Students]
  *     parameters:
  *       - in: query
@@ -137,6 +141,8 @@ export const getAllStudents = async (req, res) => {
  * /students/{id}:
  *   get:
  *     summary: Get a student by ID
+ *     security:
+ *         - bearerAuth: []
  *     tags: [Students]
  *     parameters:
  *       - name: id
@@ -164,6 +170,8 @@ export const getStudentById = async (req, res) => {
  * /students/{id}:
  *   put:
  *     summary: Update a student
+ *     security:
+ *         - bearerAuth: []
  *     tags: [Students]
  *     parameters:
  *       - name: id
@@ -195,6 +203,8 @@ export const updateStudent = async (req, res) => {
  * /students/{id}:
  *   delete:
  *     summary: Delete a student
+ *     security:
+ *         - bearerAuth: []
  *     tags: [Students]
  *     parameters:
  *       - name: id

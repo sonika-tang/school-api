@@ -12,6 +12,8 @@ import db from '../models/index.js';
  * /courses:
  *   post:
  *     summary: Create a new course
+ *     security:
+ *         - bearerAuth: []
  *     tags: [Courses]
  *     requestBody:
  *       required: true
@@ -45,6 +47,8 @@ export const createCourse = async (req, res) => {
  * /courses:
  *   get:
  *     summary: Get all courses
+ *     security:
+ *         - bearerAuth: []
  *     tags: [Courses]
  *     parameters:
  *       - in: query
@@ -118,6 +122,8 @@ export const getAllCourses = async (req, res) => {
  * /courses/{id}:
  *   get:
  *     summary: Get a course by ID
+ *     security:
+ *         - bearerAuth: []
  *     tags: [Courses]
  *     parameters:
  *       - in: path
@@ -145,6 +151,8 @@ export const getCourseById = async (req, res) => {
  * /courses/{id}:
  *   put:
  *     summary: Update a course
+ *     security:
+ *         - bearerAuth: []
  *     tags: [Courses]
  *     parameters:
  *       - in: path
@@ -176,6 +184,8 @@ export const updateCourse = async (req, res) => {
  * /courses/{id}:
  *   delete:
  *     summary: Delete a course
+ *     security:
+ *         - bearerAuth: []
  *     tags: [Courses]
  *     parameters:
  *       - in: path

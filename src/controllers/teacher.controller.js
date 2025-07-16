@@ -12,6 +12,8 @@ import db from '../models/index.js';
  * /teachers:
  *   post:
  *     summary: Create a new teacher
+ *     security:
+ *         - bearerAuth: []
  *     tags: [Teachers]
  *     requestBody:
  *       required: true
@@ -43,6 +45,8 @@ export const createTeacher = async (req, res) => {
  * /teachers:
  *   get:
  *     summary: Get all teachers
+ *     security:
+ *         - bearerAuth: []
  *     tags: [Teachers]
  *     parameters:
  *       - in: query
@@ -144,6 +148,8 @@ export const getAllTeachers = async (req, res) => {
  * /teachers/{id}:
  *   get:
  *     summary: Get a teacher by ID
+ *     security:
+ *         - bearerAuth: []
  *     tags: [Teachers]
  *     parameters:
  *       - in: path
@@ -171,6 +177,8 @@ export const getTeacherById = async (req, res) => {
  * /teachers/{id}:
  *   put:
  *     summary: Update a teacher
+ *     security:
+ *         - bearerAuth: []
  *     tags: [Teachers]
  *     parameters:
  *       - in: path
@@ -208,6 +216,8 @@ export const updateTeacher = async (req, res) => {
  * /teachers/{id}:
  *   delete:
  *     summary: Delete a teacher
+ *     security:
+ *         - bearerAuth: []
  *     tags: [Teachers]
  *     parameters:
  *       - in: path
